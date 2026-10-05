@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
+import { createHash } from "crypto";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { clientIp, ipInfo } from "./security.server";
@@ -7,6 +8,59 @@ import { analyzeSite } from "./scan.server";
 
 const MAX_FAILS = 5;
 const WINDOW_MIN = 15;
+const deviceSchema = z.object({
+  deviceId: z.string().trim().toUpperCase().regex(/^GW-[A-Z0-9]{4}(?:-[A-Z0-9]{4}){3}$/),
+  password: z.string().min(10).max(72),
+  mode: z.enum(["create", "access"]),
+});
+
+function deviceEmail(deviceId: string) {
+  return `${createHash("sha256").update(deviceId).digest("hex")}@device.guardaweb.local`;
+}
+
+/** Cria ou abre uma identidade privada ligada ao ID guardado no dispositivo. */
+export const accessDevice = createServerFn({ method: "POST" })
+  .inputValidator((d) => deviceSchema.parse(d))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const email = deviceEmail(data.deviceId);
+    const ip = clientIp();
+    const since = new Date(Date.now() - WINDOW_MIN * 60_000).toISOString();
+    const { count } = await supabaseAdmin.from("login_attempts").select("id", { count: "exact", head: true }).eq("ip", ip).eq("success", false).gte("created_at", since);
+    const log = (success: boolean, reason: string) => supabaseAdmin.from("login_attempts").insert({ email, ip, success, reason });
+
+    if ((count ?? 0) >= MAX_FAILS * 2) return { ok: false as const, error: `Demasiadas tentativas. Aguarde ${WINDOW_MIN} minutos.` };
+    if (data.mode === "create") {
+      const { error } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: data.password,
+        email_confirm: true,
+        user_metadata: { access_type: "device" },
+      });
+      if (error) {
+        await log(false, "device_create");
+        return { ok: false as const, error: "Este ID já existe. Escolha a opção para recuperar o acesso." };
+      }
+    }
+
+    const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
+    const sb = createClient(process.env["SUPABASE_URL"]!, key, {
+      auth: { persistSession: false, autoRefreshToken: false, storage: undefined },
+      global: { fetch: (input, init) => {
+        const headers = new Headers(init?.headers);
+        if (key.startsWith("sb_") && headers.get("Authorization") === `Bearer ${key}`) headers.delete("Authorization");
+        headers.set("apikey", key);
+        return fetch(input, { ...init, headers });
+      } },
+    });
+    const { data: sessionData, error } = await sb.auth.signInWithPassword({ email, password: data.password });
+    if (error || !sessionData.session) {
+      await log(false, "device_password");
+      return { ok: false as const, error: "ID do dispositivo ou senha incorretos." };
+    }
+    await log(true, "device_ok");
+    return { ok: true as const, access_token: sessionData.session.access_token, refresh_token: sessionData.session.refresh_token };
+  });
 
 /** Login protegido: anti brute-force (por e-mail e IP) + bloqueio de VPN/proxy. */
 export const secureLogin = createServerFn({ method: "POST" })

@@ -36,7 +36,7 @@ export function HostingView() {
         <Stat icon={FileCode2} label="Ficheiros" value={String(d.files.length)} />
         <div className="rounded-2xl border border-border bg-card p-5">
           <p className="flex items-center gap-2 text-sm font-semibold text-muted-foreground"><HardDrive size={16} /> Armazenamento</p>
-          <p className="mt-2 text-2xl font-extrabold">{fmt(d.used)} <span className="text-base font-semibold text-muted-foreground">/ 5 GB</span></p>
+          <p className="mt-2 text-2xl font-extrabold">{fmt(d.used)} <span className="text-base font-semibold text-muted-foreground">/ 128 GB</span></p>
           <div className="mt-3 h-2 rounded-full bg-muted"><div className="h-2 rounded-full bg-primary" style={{ width: `${Math.max(pct, 1)}%` }} /></div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from "crypto";
 
-export const QUOTA_BYTES = 5 * 1024 * 1024 * 1024; // 5 GB por conta
+export const QUOTA_BYTES = 128 * 1024 * 1024 * 1024; // 128 GB por identidade de dispositivo
 export const MAX_FILE_BYTES = 25 * 1024 * 1024;
 
 const MIME: Record<string, string> = {
@@ -52,7 +52,7 @@ export async function putFile(userId: string, siteId: string, rawPath: string, b
   if (!site || site.user_id !== userId) throw new Error("Site não encontrado");
   const used = await userUsage(userId);
   const { data: prev } = await sb.from("site_files").select("size").eq("site_id", siteId).eq("path", path).maybeSingle();
-  if (used - Number(prev?.size ?? 0) + bytes.byteLength > QUOTA_BYTES) throw new Error("Limite de 5 GB atingido");
+  if (used - Number(prev?.size ?? 0) + bytes.byteLength > QUOTA_BYTES) throw new Error("Limite de 128 GB atingido");
   const type = mimeOf(path);
   const { error } = await sb.storage.from("sites").upload(`${siteId}/${path}`, bytes, { contentType: type, upsert: true });
   if (error) throw new Error(error.message);

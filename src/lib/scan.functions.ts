@@ -101,8 +101,8 @@ export const lookupDocument = createServerFn({ method: "POST" })
         ok: true as const,
         data: {
           name: String(d.gsmc ?? ""),
-          birthDate: "",
-          company: isCompany ? String(d.gsmc ?? "") : "",
+          birthDate: String(d.birthDate ?? d.birth_date ?? d.dataNascimento ?? d.dtNascimento ?? d.csrq ?? d.csny ?? ""),
+          company: isCompany || data.type === "bi" ? String(d.gsmc ?? "") : "",
           address: String(d.nsrdz ?? ""),
           status: String(d.hdzt ?? ""),
         },
