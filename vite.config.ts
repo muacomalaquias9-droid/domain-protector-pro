@@ -9,15 +9,15 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 // Public (publishable) backend values. Used as a build-time fallback so the
 // browser bundle never ships without them, even if the host's .env is missing
 // (e.g. after a remix or on an external host like Vercel).
-const PUBLIC_SUPABASE_URL = process.env.VITE_SUPABASE_URL || "https://aflkhahgjedcynwrtqka.supabase.co";
-const PUBLIC_SUPABASE_KEY = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "sb_publishable_LVBQcM_vn7_Y2hjXZjitPQ_29vsWLCJ";
-const PUBLIC_SUPABASE_PROJECT_ID = process.env.VITE_SUPABASE_PROJECT_ID || "aflkhahgjedcynwrtqka";
+const PUBLIC_SUPABASE_URL = process.env['VITE_SUPABASE_URL'] || "https://aflkhahgjedcynwrtqka.supabase.co";
+const PUBLIC_SUPABASE_KEY = process.env['VITE_SUPABASE_PUBLISHABLE_KEY'] || "sb_publishable_LVBQcM_vn7_Y2hjXZjitPQ_29vsWLCJ";
+const PUBLIC_SUPABASE_PROJECT_ID = process.env['VITE_SUPABASE_PROJECT_ID'] || "aflkhahgjedcynwrtqka";
 
-process.env.VITE_SUPABASE_URL ||= PUBLIC_SUPABASE_URL;
-process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||= PUBLIC_SUPABASE_KEY;
-process.env.VITE_SUPABASE_PROJECT_ID ||= PUBLIC_SUPABASE_PROJECT_ID;
-process.env.SUPABASE_URL ||= PUBLIC_SUPABASE_URL;
-process.env.SUPABASE_PUBLISHABLE_KEY ||= PUBLIC_SUPABASE_KEY;
+process.env['VITE_SUPABASE_URL'] ||= PUBLIC_SUPABASE_URL;
+process.env['VITE_SUPABASE_PUBLISHABLE_KEY'] ||= PUBLIC_SUPABASE_KEY;
+process.env['VITE_SUPABASE_PROJECT_ID'] ||= PUBLIC_SUPABASE_PROJECT_ID;
+process.env['SUPABASE_URL'] ||= PUBLIC_SUPABASE_URL;
+process.env['SUPABASE_PUBLISHABLE_KEY'] ||= PUBLIC_SUPABASE_KEY;
 
 export default defineConfig({
   tanstackStart: {
