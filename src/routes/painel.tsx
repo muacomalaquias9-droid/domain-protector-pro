@@ -13,6 +13,7 @@ import { checkSessionIp, securityOverview, auditOwnSite } from "@/lib/security.f
 import type { ScanResult, Finding } from "@/lib/scan.server";
 import { AppIcon } from "@/components/AppIcon";
 import { HostingView } from "@/components/HostingView";
+import { BuildDeployView } from "@/components/BuildDeployView";
 
 export const Route = createFileRoute("/painel")({
   validateSearch: (s: Record<string, unknown>): { url?: string } => (typeof s["url"] === "string" ? { url: s["url"] } : {}),
@@ -117,7 +118,7 @@ function Painel() {
           {tab === "history" && <HistoryView />}
           {tab === "security" && <SecurityView />}
           {tab === "profile" && <Profile />}
-          {tab === "hosting" && <HostingView />}
+          {tab === "hosting" && <div className="space-y-6"><BuildDeployView /><HostingView /></div>}
         </div>
       </div>
 
