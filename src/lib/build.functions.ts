@@ -18,12 +18,32 @@ const DeployInput = z.object({
     .max(3000),
 });
 
+// Verifies the server-only build key is present and accepted by the provider.
+async function verifyConnection(): Promise<{ ok: true } | { ok: false; error: string }> {
+  const t = process.env["VERCEL_TOKEN"];
+  if (!t) return { ok: false, error: "O serviço de compilação ainda não está configurado." };
+  try {
+    const r = await fetch(`${VERCEL}/v2/user`, { headers: { Authorization: `Bearer ${t}` } });
+    if (r.ok) return { ok: true };
+    console.error("build service auth failed", r.status);
+    return { ok: false, error: r.status === 401 || r.status === 403 ? "A chave do serviço de compilação é inválida ou expirou." : "O serviço de compilação não respondeu. Tente novamente." };
+  } catch {
+    return { ok: false, error: "O serviço de compilação não respondeu. Tente novamente." };
+  }
+}
+
+export const checkBuildConnection = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => verifyConnection());
+
 // Sends the project to the build service, which installs dependencies,
 // detects the framework and builds it (like Vercel).
 export const startBuildDeploy = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => DeployInput.parse(d))
   .handler(async ({ data, context }) => {
+    const conn = await verifyConnection();
+    if (!conn.ok) return { ok: false as const, error: conn.error };
     const safe = data.files.filter((f) => !f.file.includes("..") && !f.file.startsWith("node_modules/") && !f.file.startsWith(".git/"));
     const project = `gw-${context.userId.slice(0, 8)}-${data.name}`.slice(0, 90);
     const res = await fetch(`${VERCEL}/v13/deployments?skipAutoDetectionConfirmation=1`, {
