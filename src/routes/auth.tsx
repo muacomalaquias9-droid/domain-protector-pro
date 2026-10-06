@@ -80,7 +80,7 @@ function AuthPage() {
           </div>
         </Field>
         <Field label="Senha privada"><input type="password" minLength={10} maxLength={72} className={input} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo de 10 caracteres" required /></Field>
-        <Button disabled={busy || deviceId.length !== 23 || password.length < 10} className="h-14 w-full rounded-2xl text-base font-bold">
+        <Button disabled={busy || !/^GW-[A-Z0-9]{4}(-[A-Z0-9]{4}){3}$/.test(deviceId.trim()) || password.length < 10} className="h-14 w-full rounded-2xl text-base font-bold">
           {busy ? <Loader2 className="animate-spin" /> : <ShieldCheck />} {recover ? "Abrir a GuardaWeb" : "Proteger este dispositivo"}
         </Button>
         <button type="button" className="mx-auto flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground" onClick={() => { setRecover(!recover); if (recover) setDeviceId(newDeviceId()); else setDeviceId(""); }}>
