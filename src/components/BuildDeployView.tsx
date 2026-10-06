@@ -35,6 +35,7 @@ export function BuildDeployView() {
       if (s.state === "READY" || s.state === "ERROR" || s.state === "CANCELED") return s.state;
       await new Promise((r) => setTimeout(r, 4000));
     }
+    return undefined;
   }
 
   async function onDeploy() {
