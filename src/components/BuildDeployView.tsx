@@ -28,7 +28,7 @@ export function BuildDeployView() {
   const [url, setUrl] = useState<string | null>(null);
   const [logs, setLogs] = useState<string[]>([]);
 
-  async function poll(id: string) {
+  async function poll(id: string): Promise<string | undefined> {
     for (let i = 0; i < 120; i++) {
       const s = await status({ data: { id } });
       setState(s.state); setLogs(s.logs); if (s.url) setUrl(s.url);
