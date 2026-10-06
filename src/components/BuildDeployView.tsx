@@ -4,7 +4,7 @@ import JSZip from "jszip";
 import { toast } from "sonner";
 import { ExternalLink, FileArchive, Loader2, Rocket, Terminal } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { startBuildDeploy, buildStatus } from "@/lib/build.functions";
+import { startBuildDeploy, buildStatus, checkBuildConnection } from "@/lib/build.functions";
 
 const SKIP = /(^|\/)(node_modules|\.git|\.next|dist|build|\.vercel)\//;
 
@@ -19,6 +19,7 @@ async function zipToFiles(file: File) {
 
 export function BuildDeployView() {
   const deploy = useServerFn(startBuildDeploy);
+  const check = useServerFn(checkBuildConnection);
   const status = useServerFn(buildStatus);
   const inputRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState("");
@@ -42,6 +43,10 @@ export function BuildDeployView() {
     if (!zip) return;
     setBusy(true); setLogs([]); setUrl(null); setState("A preparar ficheiros");
     try {
+      setState("A verificar ligação");
+      const c = await check();
+      if (!c.ok) throw new Error(c.error);
+      setState("A preparar ficheiros");
       const files = await zipToFiles(zip);
       if (!files.length) throw new Error("O ZIP está vazio.");
       const r = await deploy({ data: { name, files } });
